@@ -1,7 +1,7 @@
 # Pokedex
 
 ## Tópicos:
-Praticar os seus conhecimentos em:
+Praticar conhecimentos em:
 - **JAVASCRIPT**;
 - **Fetch API**;
 
