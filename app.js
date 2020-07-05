@@ -1,52 +1,36 @@
-const fetchPokemon = () => {
-    //fetch: versão moderna para fazer requisição AJAX no browser (ajax- requisições assincronas para obter dados sem recarregar a página)
+const getPokemonUrl = id => `https://pokeapi.co/api/v2/pokemon/${id}`
 
-    //fetch: metodo que ao ser invocado faz uma requisição http e traz dados da url especificada no argumento
-    //fetch: retorna uma promise
-    //promise: objeto que representa um sucesso ou uma falha de uma operação assincrona
-    const getPokemonUrl = id => `https://pokeapi.co/api/v2/pokemon/${id}`
+const generatePokemonPromises = () =>
+    Array(150) // array vazio com 150 posições
+        .fill() //deixa valor undefined no array
+        .map((_, index) =>
+            fetch(getPokemonUrl(index + 1)).then(response => response.json()))
 
-    // fetch(url)
-    //     .then(response => response.json()) // resposta da promise convertida em json
-    //     .then(pokemon => { //resultado no console
-    //         console.log(pokemon)
-    //     })
+const generateHTML = pokemons => pokemons.reduce((accumulator, { name, id, types }) => {
+    const elementTypes = types.map(typeInfo => typeInfo.type.name)
 
-    const pokemonPromises = []
+    accumulator += `
+                <li class="card ${elementTypes[0]}">
+                    <img class="card-image" alt="${name}" src="https://pokeres.bastionbot.org/images/pokemon/${id}.png"/>
+                    <h2 class="card-tittle">${id}. ${name}</h2>
+                    <p class="card-subtittle">${elementTypes.join(' | ')}</p>
+                </li>
+            `
+    return accumulator
 
-    for(let count = 1; count <= 150; count++) {
-        pokemonPromises.push(fetch(getPokemonUrl(count)).then(response => response.json()))
-    }
+}, '')
 
-    //all metodo estatico
-    //metodo estatico: método que nao obriga a usar o NEW como prefixo da invocação dele, posibilita encadiar o objeto estatico diretamente no objeto construtor.
 
-    Promise.all(pokemonPromises)
-        .then(pokemons => {
-            // console.log(pokemons)
+const insertPokemonsIntoPage = pokemons => {
+    const ul = document.querySelector('[data-js="pokedex"]')
 
-            //reduce - reduz um array em outra coisa
-            const lisPokemons = pokemons.reduce((accumulator, pokemon) => {
-                const types = pokemon.types.map(typeInfo => typeInfo.type.name)
-
-                accumulator += `
-                    <li class="card ${types[0]}">
-                        <img class="card-image" alt="${pokemon.name}" src="https://pokeres.bastionbot.org/images/pokemon/${pokemon.id}.png"/>
-                        <h2 class="card-tittle">${pokemon.id}. ${pokemon.name}</h2>
-                        <p class="card-subtittle">${types.join(' | ')}</p>
-                    </li>
-                `
-                return accumulator
-            }, '')
-
-            const ul = document.querySelector('[data-js="pokedex"]')
-
-            ul.innerHTML = lisPokemons
-
-            // console.log(lisPokemons)
-        })
-    
-    
+    ul.innerHTML = pokemons
 }
 
-fetchPokemon()
+
+const pokemonPromises = generatePokemonPromises()
+
+Promise.all(pokemonPromises)
+    .then(generateHTML)
+    .then(insertPokemonsIntoPage)
+
